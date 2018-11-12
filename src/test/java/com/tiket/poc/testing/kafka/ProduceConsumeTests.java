@@ -38,7 +38,7 @@ import static org.hamcrest.Matchers.*;
         })
 @EmbeddedKafka(topics = ProduceConsumeTests.SUBSCRIBE_TOPIC,
         partitions = ProduceConsumeTests.PARTITION_COUNT,
-        count = 1
+        count = 3
 )
 @RunWith(SpringRunner.class)
 public class ProduceConsumeTests {

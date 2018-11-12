@@ -38,7 +38,7 @@ public class SubscriptionHandlerTests {
     public void whenSubscribeWithoutEmailAddress_thenMustThrowConstrainViolationError() {
         expectedErrors.expect(allOf(
                 instanceOf(ConstraintViolationException.class),
-                hasProperty("constraintViolations", iterableWithSize(2))
+                hasProperty("constraintViolations", iterableWithSize(1))
         ));
 
         subscriptionHandler.handle(Subscription.builder()
