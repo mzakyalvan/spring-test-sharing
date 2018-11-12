@@ -50,7 +50,7 @@ public class SubscriptionServiceTests {
 
     @BeforeClass
     public static void setUpClass() {
-        System.setProperty("retrofit.default.url", String.format("http://localhost:%d/", webServer.getPort()));
+        System.setProperty("retrofit.default.url", webServer.url("/").toString());
     }
 
     @Test
