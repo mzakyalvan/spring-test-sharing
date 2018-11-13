@@ -13,14 +13,19 @@ import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-import static org.mockito.Mockito.*;
-import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.messaging.support.MessageBuilder.*;
 
 /**
  * @author zakyalvan
@@ -30,8 +35,8 @@ import static org.hamcrest.Matchers.*;
         properties = {
                 "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
                 "spring.kafka.client-id=testing-poc",
-//                "spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.ByteArraySerializer",
-                "spring.kafka.template.default-topic=register",
+                "spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.ByteArraySerializer",
+                "spring.kafka.template.default-topic=subscribe.register",
                 "spring.kafka.consumer.group-id=testing-poc-group",
                 "spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.ByteArrayDeserializer",
                 "spring.kafka.listener.concurrency=5"
@@ -40,10 +45,11 @@ import static org.hamcrest.Matchers.*;
         partitions = ProduceConsumeTests.PARTITION_COUNT,
         count = 3
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @RunWith(SpringRunner.class)
 public class ProduceConsumeTests {
-    public static final String SUBSCRIBE_TOPIC = "register";
-    public static final int PARTITION_COUNT = 5;
+    public static final String SUBSCRIBE_TOPIC = "subscribe.register";
+    public static final int PARTITION_COUNT = 3;
 
     @Autowired
     private KafkaListenerEndpointRegistry endpointRegistry;
@@ -51,16 +57,16 @@ public class ProduceConsumeTests {
     @Autowired
     private KafkaTemplate<Object, Object> kafkaTemplate;
 
-    @SpyBean
-    private SubscriptionListener subscriptionListener;
-
     @Autowired
     private ObjectMapper objectMapper;
+
+    @SpyBean
+    private SubscriptionListener subscriptionListener;
 
     @Before
     public void setUp() throws Exception {
         /**
-         * Wait all listener containers to be ready for message processing.
+         * Wait all listener containers to be ready for message receive and processing.
          */
         for(Object listenerContainer : endpointRegistry.getListenerContainers()) {
             ContainerTestUtils.waitForAssignment(listenerContainer, PARTITION_COUNT);
@@ -75,15 +81,19 @@ public class ProduceConsumeTests {
 
         LocalDateTime subscribeTime = LocalDateTime.now();
 
-        kafkaTemplate.sendDefault(objectMapper.writeValueAsString(SubscriptionData.builder()
-                .emailAddress("zaky.alvan@tiket.com")
-                .fullName("Muhammad Zaky Alvan")
-                .subscribeTime(subscribeTime)
-                .build()));
+        Message<SubscriptionData> producerMessage = withPayload(
+                SubscriptionData.builder()
+                        .emailAddress("zaky.alvan@tiket.com")
+                        .fullName("Muhammad Zaky Alvan")
+                        .subscribeTime(subscribeTime)
+                        .build()
+                )
+                .build();
 
-        /**
-         * Tricky delay.
-         */
+        CountDownLatch sendLatch = new CountDownLatch(1);
+        kafkaTemplate.send(producerMessage).addCallback(result -> sendLatch.countDown(), Throwable::printStackTrace);
+        sendLatch.await(200, TimeUnit.MILLISECONDS);
+
         Thread.sleep(100);
 
         verify(subscriptionListener, times(1))

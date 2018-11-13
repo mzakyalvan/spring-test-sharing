@@ -27,6 +27,7 @@
     <properties>
         <java.version>1.8</java.version>
         <spring-kafka.version>1.3.7.RELEASE</spring-kafka.version>
+        <maven-surfire-plugin.version>2.22.1</maven-surfire-plugin.version>
     </properties>
 
     <dependencies>
@@ -123,4 +124,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surfire-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

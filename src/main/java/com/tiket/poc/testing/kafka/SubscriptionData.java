@@ -27,7 +27,7 @@ public class SubscriptionData implements Serializable {
     private String fullName;
 
     @NotNull
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss SSS")
     private LocalDateTime subscribeTime;
 
     @Builder
@@ -39,7 +39,7 @@ public class SubscriptionData implements Serializable {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class SubscriptionDataBuilder {
-        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss SSS")
         public SubscriptionDataBuilder subscribeTime(LocalDateTime subscribeTime) {
             this.subscribeTime = subscribeTime;
             return this;

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SimpleSubscriptionListener implements SubscriptionListener {
     @Override
-    @KafkaListener(topics = "register")
+    @KafkaListener(topics = "subscribe.register")
     public void handleSubscription(@Payload SubscriptionData subscription) {
         log.info("Handle subscription with data {}", subscription);
     }
